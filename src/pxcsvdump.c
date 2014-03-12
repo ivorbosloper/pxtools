@@ -47,6 +47,20 @@ int PXtoCSVString(char *dst, const unsigned char *src, int type)
 	return 0;
 }
 
+int create_csv_header(px_header *header, px_fieldInfo **felder)
+{
+	int i;
+	for (i = 0; i < header->numFields; i++ )
+	{
+		//		fprintf(stderr, "%02d: %d - ", felder[i]->type, felder[i]->size);
+		if (i > 0)
+			putchar(delim);
+		printf("%s", felder[i]->name);
+	}
+	putchar('\n');
+	return 0;
+}
+
 int create_csv_line(px_header *header, px_fieldInfo **felder, px_records block, char *blobname)
 {
 	int i, block_index = 0;
@@ -334,10 +348,12 @@ int create_csv_line(px_header *header, px_fieldInfo **felder, px_records block, 
 
 	return 0;
 }
-int create_csv_dump(px_header *header, px_fieldInfo **felder, px_blocks **blocks, char *blobname)
+int create_csv_dump(px_header *header, px_fieldInfo **felder, px_blocks **blocks, char *blobname, int writeheader)
 {
 	int n,f,c = 0;
 
+	if (writeheader)
+		create_csv_header(header, felder);
 	n = header->firstBlock - 1;
 	while (n != -1)
 	{
@@ -371,6 +387,7 @@ void display_help ()
 	       "  -b, --blobname=<name>   Name of the .MB-file <name>\n"
 	       "  -D, --delimiter=<delim> Field delimiter to use instead of comma   \n"
 	       "  -f, --filename=<name>   Name of the .DB-file <name>\n"
+	       "  -H, --header            Output csv header line\n"
 	       "  -h, --help              Display this help and exit\n"
 	       "  -V, --version           Output version information and exit\n"
 	       "\n"
@@ -392,7 +409,7 @@ int main ( int argc, char **argv)
 	px_fieldInfo **felder;
 	px_blocks **blocks;
 
-	int f,i;
+	int f, i, writeheader=0;
 	char *blobname = NULL, *filename = NULL;
 #ifdef HAVE_GETOPT_LONG
 	static struct option long_options[] =
@@ -400,6 +417,7 @@ int main ( int argc, char **argv)
 		{"blobname", required_argument, 0, 'b'},
 		{"delimiter", required_argument, 0, 'D'},
 		{"filename", required_argument, 0, 'f'},
+		{"header", no_argument, 0, 'H'},
 		{"help", no_argument, 0, 'h'},
 		{"version", no_argument, 0, 'V'},
 		{0, 0, 0, 0}
@@ -408,9 +426,9 @@ int main ( int argc, char **argv)
 	
 	while ( 
 #ifdef HAVE_GETOPT_LONG
-		(i = getopt_long(argc, argv, "b:D:f:hV", long_options, (int *) 0)) != EOF
+		(i = getopt_long(argc, argv, "b:D:f:HhV", long_options, (int *) 0)) != EOF
 #else
-		(i = getopt(argc, argv, "b:D:f:hV")) != EOF
+		(i = getopt(argc, argv, "b:D:f:HhV")) != EOF
 #endif
 		)
 	{
@@ -429,6 +447,9 @@ int main ( int argc, char **argv)
 			break;
 		    case 'f' :
 			filename = optarg;
+			break;
+		    case 'H' :
+			writeheader = 1;
 			break;
 		    case 'V':
 			display_version();
@@ -476,7 +497,7 @@ int main ( int argc, char **argv)
 		return(-1);
 	}
 
-	create_csv_dump (&header, felder, blocks, blobname);
+	create_csv_dump (&header, felder, blocks, blobname, writeheader);
 
 	return 0;
 }
