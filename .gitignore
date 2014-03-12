@@ -1,0 +1,15 @@
+# Ignore relevant files
+
+Makefile
+config.h
+config.status
+doc/Makefile
+po/Makefile
+po/Makefile.in
+po/POTFILES
+src/.deps/
+src/Makefile
+src/px*dump
+src/pxinfo
+stamp-h1
+stamp-h
